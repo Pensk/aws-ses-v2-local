@@ -1,0 +1,13 @@
+{
+  "name": "aws-ses-v2-local-docker-smoke-test",
+  "private": true,
+  "description": "Smoke test client for the Docker image; not part of the image",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sesv2": "3.1159.0"
+  }
+}
