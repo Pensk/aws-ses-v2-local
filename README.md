@@ -13,22 +13,31 @@ Node.js **24 LTS**. The `latest` tag on Docker Hub when this was written was a
 Upstream also publishes its own image, `ghcr.io/domdomegg/aws-ses-v2-local`.
 This image differs in that it keeps the `pensk/aws-ses-v2-local` name, pins the
 base image and dependency tree, runs as a non-root user, and listens on
-`0.0.0.0` so it also starts on hosts without IPv6.
+`0.0.0.0` inside the container so it also starts on hosts without IPv6.
 
 ## Run
 
 ```sh
-docker run --rm -p 8005:8005 pensk/aws-ses-v2-local
+docker run --rm -p 127.0.0.1:8005:8005 pensk/aws-ses-v2-local
 ```
 
 Or build it from this repository:
 
 ```sh
 docker build -t aws-ses-v2-local .
-docker run --rm -p 8005:8005 aws-ses-v2-local
+docker run --rm -p 127.0.0.1:8005:8005 aws-ses-v2-local
 ```
 
 Then open <http://localhost:8005> to see captured emails in the web viewer.
+
+These commands publish the port on `127.0.0.1` only. The emulator has no
+authentication: anyone who can reach the port can read every captured email
+from `/store` or the web viewer, or delete them with `/clear-store`. With
+`-p 8005:8005`, Docker publishes on all of the host's network interfaces, so
+other machines on the network can do that too. If you need access from
+another machine, choose that host binding explicitly. The `--host 0.0.0.0`
+in the image's command only controls the address inside the container, not
+which host interfaces Docker publishes on.
 
 ## Send an email
 
@@ -77,8 +86,9 @@ curl http://localhost:8005/store
 
 ## What the emulator does
 
-Emails are **not delivered** anywhere. They are kept in memory and lost when
-the container stops. Upstream documents:
+By default emails are **not delivered** anywhere. They are kept in memory and
+lost when the container stops. They are only forwarded if you configure an SMTP
+server with `SMTP_TRANSPORT` (see below). Upstream documents:
 
 - SES v2 `SendEmail` (simple, raw and template content) and `SendBulkEmail`
 - SES v2 email template operations (create, get, list, update, delete, test render) and `GetAccount`

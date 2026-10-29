@@ -34,9 +34,25 @@ port="$(docker port "$container" 8005/tcp | head -n 1 | sed 's/.*://')"
 
 SES_ENDPOINT="http://127.0.0.1:$port" node "$workdir/smoke.mjs"
 
-uid="$(docker exec "$container" id -u)"
-if [ "$uid" = "0" ]; then
-	echo "FAIL: emulator is running as root"
+# Check the running server process (PID 1), not a new process started by docker exec.
+cmdline="$(docker exec "$container" cat /proc/1/cmdline 2>/dev/null | tr '\0' ' ' || true)"
+case "$cmdline" in
+	"node "*/aws-ses-v2-local" "*) ;;
+	*)
+		echo "FAIL: PID 1 is not the emulator (cmdline: '$cmdline')"
+		exit 1
+		;;
+esac
+# Real, effective, saved and filesystem UIDs.
+uids="$(docker exec "$container" awk '/^Uid:/ {print $2, $3, $4, $5}' /proc/1/status 2>/dev/null || true)"
+if ! [[ "$uids" =~ ^[0-9]+\ [0-9]+\ [0-9]+\ [0-9]+$ ]]; then
+	echo "FAIL: could not determine the emulator's UID (got '$uids')"
 	exit 1
 fi
-echo "Emulator runs as non-root uid $uid"
+for uid in $uids; do
+	if [ "$uid" = "0" ]; then
+		echo "FAIL: emulator is running as root (Uid: $uids)"
+		exit 1
+	fi
+done
+echo "Emulator (PID 1) runs as non-root uid ${uids%% *}"
