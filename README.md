@@ -18,14 +18,14 @@ base image and dependency tree, runs as a non-root user, and listens on
 ## Run
 
 ```sh
-docker run --rm -p 127.0.0.1:8005:8005 pensk/aws-ses-v2-local
+docker run --rm -p 127.0.0.1:8005:8005 pensk/aws-ses-v2-local:2.11.0
 ```
 
 Or build it from this repository:
 
 ```sh
-docker build -t aws-ses-v2-local .
-docker run --rm -p 127.0.0.1:8005:8005 aws-ses-v2-local
+docker build -t aws-ses-v2-local:2.11.0 .
+docker run --rm -p 127.0.0.1:8005:8005 aws-ses-v2-local:2.11.0
 ```
 
 Then open <http://localhost:8005> to see captured emails in the web viewer.
